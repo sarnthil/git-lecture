@@ -1,58 +1,70 @@
 import getpass
 import pickle
 import sys
+import os
+import hashlib
+import secrets
+
 
 def get_credentials():
-    username = input('Enter your username: ')
-    password = getpass.getpass('Enter your password: ')
-    return username, hash_string(password)
+    username = input("Enter your username: ")
+    password = getpass.getpass("Enter your password: ")
+    return username, password
 
-def hash_string(inputstring):
-    # hash the string
-    hashed_password = sum(ord(char) for char in inputstring) 
-    return hashed_password
-    
+
 def authenticate(username, password, pwdb):
     if username in pwdb:
-        if password == pwdb[username]:
+        if pwhash(password) == pwdb[username]:
             return True
     return False
+
 
 def read_pwdb(pwdb_file):
     pwdb_file.seek(0)
     pwdb = pickle.load(pwdb_file)
     return pwdb
 
+
 def write_pwdb(pwdb, pwdb_file):
     pwdb_file.seek(0)
     pickle.dump(pwdb, pwdb_file)
 
+
 def add_user(username, password, pwdb):
-    pwdb[username] = password
+    pwdb[username] = pwhash(password)
     return pwdb
 
-if __name__ == '__main__':
-    DEFAULT_PWDB = 'pwdb.pkl'
+
+def pwhash(password, salt=None):
+    salt = secrets.token_hex(32)
+    H = hashlib.sha3_512()
+    H.update(password.encode())
+    return H.hexdigest() + salt
+
+
+if __name__ == "__main__":
+    DEFAULT_PWDB = "pwdb.pkl"
 
     try:
-        pwdb_file = open(DEFAULT_PWDB, 'rb+')
+        pwdb_file = open(DEFAULT_PWDB, "rb+")
     except FileNotFoundError:
-        pwdb_file = open(DEFAULT_PWDB, 'wb')
+        pwdb_file = open(DEFAULT_PWDB, "wb")
         pickle.dump({}, pwdb_file)
         pwdb_file.close()
-        print('Created empty pw database!')
+        print("Created empty pw database!")
         sys.exit(0)
 
     username, password = get_credentials()
     pwdb = read_pwdb(pwdb_file)
 
     if authenticate(username, password, pwdb):
-        print('Successfull authentication', username, password)
+        print("Successfull authentication", username, password)
     else:
-        ans = input('User not known or password is wrong. Do you want to add the '
-                    'user to the password database? [y/n]')
+        ans = input(
+            "User not known or password is wrong. Do you want to add the "
+            "user to the password database? [y/n]"
+        )
 
-        if ans == 'y':
+        if ans == "y":
             add_user(username, password, pwdb)
             write_pwdb(pwdb, pwdb_file)
-
