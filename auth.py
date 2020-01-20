@@ -1,7 +1,6 @@
 import getpass
 import pickle
 import sys
-import os
 import hashlib
 import secrets
 
@@ -33,7 +32,7 @@ def write_pwdb(pwdb, pwdb_file):
 
 def add_user(username, password, pwdb):
     salt = secrets.token_hex(32)
-    pwdb[username] = (pwhash(password, salt), salt)
+    pwdb[username] = pwhash(password, salt), salt
     return pwdb
 
 
