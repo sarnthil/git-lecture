@@ -14,7 +14,8 @@ def get_credentials():
 
 def authenticate(username, password, pwdb):
     if username in pwdb:
-        if pwhash(password) == pwdb[username]:
+        salt = pwdb[username][1]
+        if pwhash(password, salt) == pwdb[username][0]:
             return True
     return False
 
@@ -31,15 +32,16 @@ def write_pwdb(pwdb, pwdb_file):
 
 
 def add_user(username, password, pwdb):
-    pwdb[username] = pwhash(password)
+    salt = secrets.token_hex(32)
+    pwdb[username] = (pwhash(password, salt), salt)
     return pwdb
 
 
-def pwhash(password, salt=None):
-    salt = secrets.token_hex(32)
+def pwhash(password, salt):
     H = hashlib.sha3_512()
     H.update(password.encode())
-    return H.hexdigest() + salt
+    H.update(salt.encode())
+    return H.hexdigest()
 
 
 if __name__ == "__main__":
