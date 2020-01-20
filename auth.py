@@ -35,7 +35,6 @@ def add_user(username, password, pwdb):
 
 
 def pwhash(password, salt=None):
-    salt = "2e8c44d"
     H = hashlib.sha3_512()
     H.update(password.encode())
     return H.hexdigest()
